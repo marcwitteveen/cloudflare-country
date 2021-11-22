@@ -15,7 +15,9 @@ class CloudflareCountry {
 
 	private $countryCode = "";
 
-	private $countryCodeCanada = "CA";
+	private $countryCodeCanada = ["CA"];
+
+	private $countryNorthAmerica = ["CA", "US"];
 
 	private $countryCanada = "Canada";
 
@@ -56,9 +58,12 @@ class CloudflareCountry {
 
 	public function __construct() 
 	{
-		$this->countryCode = (string) $_SERVER["HTTP_CF_IPCOUNTRY"];
-		if (empty($this->countryCode)) {
-			$this->countryCode = (string) getenv(GEOIP_COUNTRY_CODE);
+		if (array_key_exists("HTTP_CF_IPCOUNTRY", $_SERVER)) {
+			$this->countryCode = (string) $_SERVER["HTTP_CF_IPCOUNTRY"];
+		} else if (array_key_exists("GEOIP_COUNTRY_CODE", $_SERVER)) {
+			$this->countryCode = (string) $_SERVER["GEOIP_COUNTRY_CODE"];
+		} else {
+			$this->countryCode = (string) "";
 		}
 		
 		$this->countryCode = (string) strtoupper($this->countryCode); 
@@ -67,9 +72,9 @@ class CloudflareCountry {
 		$this->allCountryCodes = array_merge($this->countryEU, $this->countryCodeCanada);
 	}
 
-	public function getCountryCode() 
+	public function getCountryCode($default = "Unknown") 
 	{
-		return $this->countryCode;	
+		return strtoupper(empty($this->countryCode)?$default:$this->countryCode);
 	}
 
 	public function getCountry() 
@@ -100,7 +105,12 @@ class CloudflareCountry {
 
 	public function isCanada()
 	{
-		return ($this->countryCode === $this->countryCodeCanada);
+		return ($this->countryCode === $this->countryCodeCanada[0]);
+	}
+
+	public function isNorthAmerica()
+	{
+		return (in_array($this->countryCode, $this->countryNorthAmerica));
 	}
 
 	public function isOther() {
